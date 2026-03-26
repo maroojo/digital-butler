@@ -10,8 +10,12 @@ function makeExpiry(minutes = 15) {
   return new Date(Date.now() + minutes * 60 * 1000).toISOString();
 }
 
+function isBase64Image(value: string) {
+  return /^data:image\/[a-zA-Z]+;base64,/.test(value);
+}
+
 export async function createBookingQuote(
-  payload: BookingQuoteRequest,
+  payload: BookingQuoteRequest
 ): Promise<BookingQuoteResponse> {
   const dorm = await getDormByIdOrSlug(payload.dormId);
   if (!dorm) {
@@ -46,8 +50,32 @@ export async function createBookingQuote(
 }
 
 export async function createBooking(
-  payload: CreateBookingRequest,
+  payload: CreateBookingRequest
 ): Promise<CreateBookingResponse> {
+  if (!payload.tenantName?.trim()) {
+    throw new Error("Tenant name is required");
+  }
+
+  if (!payload.tenantPhone?.trim()) {
+    throw new Error("Tenant phone is required");
+  }
+
+  if (!payload.moveInDate?.trim()) {
+    throw new Error("Move-in date is required");
+  }
+
+  if (!payload.slipFileName?.trim()) {
+    throw new Error("Slip file name is required");
+  }
+
+  if (!payload.slipBase64?.trim()) {
+    throw new Error("Slip image is required");
+  }
+
+  if (!isBase64Image(payload.slipBase64)) {
+    throw new Error("Slip must be an image file");
+  }
+
   const quote = await createBookingQuote({
     dormId: payload.dormId,
     roomInventoryId: payload.roomInventoryId,
@@ -55,8 +83,13 @@ export async function createBooking(
 
   return {
     bookingId: `bk_${Date.now()}`,
-    status: "pending_payment",
+    status: "pending_review",
     qrCodeValue: quote.qrCodeValue,
     expiresAt: quote.expiresAt,
+    tenantName: payload.tenantName.trim(),
+    tenantPhone: payload.tenantPhone.trim(),
+    moveInDate: payload.moveInDate,
+    slipFileName: payload.slipFileName,
+    createdAt: new Date().toISOString(),
   };
 }

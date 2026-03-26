@@ -95,11 +95,20 @@ export type CreateBookingRequest = {
   roomInventoryId: string;
   tenantName: string;
   tenantPhone: string;
+  moveInDate: string;
+  note?: string;
+  slipFileName: string;
+  slipBase64: string;
 };
 
 export type CreateBookingResponse = {
   bookingId: string;
-  status: "pending_payment";
+  status: "pending_review";
   qrCodeValue: string;
   expiresAt: string;
+  tenantName: string;
+  tenantPhone: string;
+  moveInDate: string;
+  slipFileName: string;
+  createdAt: string;
 };
